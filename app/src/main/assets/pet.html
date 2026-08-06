@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: transparent;
+    overflow: hidden;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    user-select: none;
+  }
+  #pet {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+  }
+  /* 情绪容器 */
+  #body {
+    width: 110px; height: 110px;
+    position: relative;
+    margin-top: 10px;
+    transition: transform 0.3s ease;
+    animation: idleBob 2.5s ease-in-out infinite;
+  }
+  @keyframes idleBob {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  /* 一个简单的圆滚滚桌宠(用 CSS 画) */
+  #creature {
+    width: 90px; height: 80px;
+    background: #FFB6C1;
+    border-radius: 50% 50% 45% 45%;
+    position: absolute; bottom: 0; left: 10px;
+    box-shadow: inset -10px -8px 0 rgba(0,0,0,0.08);
+  }
+  .eye {
+    width: 12px; height: 14px;
+    background: #333;
+    border-radius: 50%;
+    position: absolute; top: 28px;
+    transition: all 0.15s ease;
+  }
+  .eye.left { left: 26px; }
+  .eye.right { right: 26px; }
+  #mouth {
+    width: 18px; height: 8px;
+    border-bottom: 3px solid #333;
+    border-radius: 0 0 18px 18px;
+    position: absolute; top: 52px; left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.2s ease;
+  }
+  /* 对话框气泡 */
+  #bubble {
+    max-width: 150px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    position: relative;
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    margin-top: 4px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  #bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+  #bubble::after {
+    content: '';
+    position: absolute; bottom: -6px; left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(255,255,255,0.95);
+    border-bottom: 0;
+  }
+  /* 情绪翻倍/眨眼效果 */
+  .blink { animation: blinkAnim 0.2s ease; }
+  @keyframes blinkAnim {
+    0%,100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+  }
+  .happy #mouth { border-radius: 18px 18px 0 0; border-top: 3px solid #333; border-bottom: 0; }
+  .sad #mouth { border-radius: 0 0 18px 18px; }
+</style>
+</head>
+<body>
+<div id="pet">
+  <div id="bubble">嗨,我在这里 👋</div>
+  <div id="body">
+    <div id="creature">
+      <div class="eye left"></div>
+      <div class="eye right"></div>
+      <div id="mouth"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const body = document.getElementById('body');
+  const bubble = document.getElementById('bubble');
+  const eyes = document.querySelectorAll('.eye');
+
+  let bubbleTimer = null;
+
+  function say(text){
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(()=> bubble.classList.remove('show'), 4000);
+  }
+  function blink(){
+    eyes.forEach(e => { e.classList.add('blink'); setTimeout(()=>e.classList.remove('blink'),200); });
+  }
+  function setMood(m){
+    body.classList.remove('blink','happy','sad');
+    if(m==='happy') body.classList.add('happy');
+    if(m==='sad') body.classList.add('sad');
+  }
+  function onTap(){ blink(); say('嘿嘿,别戳我啦 ~'); }
+  function onDoubleTap(){ happyBounce(); say('(*^▽^*) 最喜欢你啦!'); }
+  function onLongPress(){ say('唔……你按住我干嘛?'); }
+  function happyBounce(){
+    body.style.transform='scale(1.15)';
+    setTimeout(()=> body.style.transform='scale(1)',300);
+  }
+  function onAppSwitch(pkg){
+    if(pkg.indexOf('taobao')>=0) say('📦 又在逛淘宝?克制点哦');
+    else if(pkg.indexOf('douyin')>=0 || pkg.indexOf('tiktok')>=0) say('🎵 刷抖音别刷太晚呀');
+    else if(pkg.indexOf('study')>=0 || pkg.indexOf('xuex')>=0) say('📚 学习辛苦啦,陪着你');
+    else say('切到别的应用啦');
+  }
+
+  // 暴露给原生层调用
+  window.petEngine = {
+    say: say,
+    onTap: onTap,
+    onDoubleTap: onDoubleTap,
+    onLongPress: onLongPress,
+    onAppSwitch: onAppSwitch,
+    blink: blink,
+    setMood: setMood
+  };
+
+  // 自动眨眼
+  setInterval(()=> blink(), 4000);
+})();
+</script>
+</body>
+</html>
