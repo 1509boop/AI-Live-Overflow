@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: build-apk
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,13 +21,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: Grant execute permission
         run: chmod +x gradlew
-      - name: Build debug APK (retry)
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 15
-          max_attempts: 6
-          retry_wait_seconds: 30
-          command: ./gradlew assembleDebug --stacktrace
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
